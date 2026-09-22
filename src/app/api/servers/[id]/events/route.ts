@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import { assertServerOwnership } from "@/lib/security";
+export async function GET(request: Request, { params }: { params: { id: string } }) { const session = await getServerSession(); if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); try { await assertServerOwnership(params.id, session.user.id); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); } const url = new URL(request.url); const limit = Math.min(Number(url.searchParams.get("limit") || 50), 100); const type = url.searchParams.get("type") || undefined; const events = await prisma.botEvent.findMany({ where: { serverId: params.id, ...(type ? { type } : {}) }, orderBy: { createdAt: "desc" }, take: limit + 1 }); const nextCursor = events.length > limit ? events.pop()?.id ?? null : null; return NextResponse.json({ events, nextCursor }); }

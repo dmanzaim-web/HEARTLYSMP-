@@ -1,21 +1,7 @@
-import { NextResponse } from "next/server";
+# Phase 3
 
-import { getServerSession } from "@/lib/session";
-import { assertServerOwnership } from "@/lib/security";
-import { MinecraftAdapter } from "@/lib/minecraft-adapter";
+Phase 3 adds real Java chat and command delivery through the Mineflayer worker, persisted event history, encrypted authentication configuration primitives, and notification APIs. Bedrock bot runtime is not claimed; only Bedrock status probing is supported.
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession();
-  if (!session?.user?.id) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+Chat and commands require an ONLINE Java runtime. Commands are sent to Minecraft through Mineflayer and never executed by the operating system.
 
-  try {
-    await assertServerOwnership(params.id, session.user.id);
-  } catch {
-    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-  }
-
-  const server = await (await import("@/lib/prisma")).prisma.server.findUnique({ where: { id: params.id } });
-  if (!server) return NextResponse.json({ success: false, error: "Server not found" }, { status: 404 });
-  const result = await new MinecraftAdapter().probeServer(server.host, server.port, server.edition as "Java" | "Bedrock" | "Auto Detect");
-  return NextResponse.json(result, { status: result.success ? 200 : 502 });
-}
+Set `BOT_SECRET_ENCRYPTION_KEY` before using encrypted authentication secrets. Run `npx prisma db push` after updating the schema.
