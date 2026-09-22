@@ -1,7 +1,6 @@
-import NextAuth from "next-auth";
-
-import { authOptions } from "@/lib/auth";
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getServerSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import { ServerCard } from "@/components/server-card";
+export default async function DashboardPage() { const session = await getServerSession(); if (!session?.user?.id) redirect("/login"); const servers = await prisma.server.findMany({ where: { userId: session.user.id }, orderBy: { createdAt: "desc" }, include: { runtime: true } }); return <main className="mx-auto max-w-7xl px-4 py-10"><header className="mb-8 flex items-center justify-between"><div><p className="text-xs uppercase tracking-[0.25em] text-accent">Dashboard</p><h1 className="mt-2 text-3xl font-semibold">Your servers</h1></div><Link href="/servers/new" className="btn-primary">+ Add Server</Link></header>{servers.length === 0 ? <div className="card p-16 text-center"><h2 className="text-3xl font-semibold">No Servers Yet</h2><p className="mt-4 text-slate-400">Add your first Minecraft server to bring a bot online.</p><Link href="/servers/new" className="btn-primary mt-8">+ Add Server</Link></div> : <div className="space-y-6">{servers.map((server) => <ServerCard key={server.id} initial={server} />)}</div>}</main>; }
