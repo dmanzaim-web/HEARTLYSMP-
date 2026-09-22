@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  servers       Server[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Server {
+  id            String        @id @default(cuid())
+  userId        String
+  name          String
+  host          String
+  port          Int
+  edition       String
+  version       String
+  username      String
+  autoReconnect Boolean       @default(true)
+  retryDelay    Int           @default(10)
+  maxRetries    Int           @default(5)
+  timeoutMs     Int           @default(30000)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  status        String        @default("OFFLINE")
+  uptime        Int           @default(0)
+  ping          Int?
+  lastConnection DateTime?
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runtime       BotRuntime?
+  logs          BotLog[]
+  chatMessages  ChatMessage[]
+  notifications Notification[]
+  backups       Backup[]
+  schedules     Schedule[]
+  automations   Automation[]
+  workflows     Workflow[]
+  watchlist     PlayerWatch[]
+}
+
+model BotRuntime {
+  id            String    @id @default(cuid())
+  serverId      String    @unique
+  processId     Int?
+  status        String    @default("OFFLINE")
+  state         String    @default("OFFLINE")
+  pid           Int?
+  reconnectCount Int      @default(0)
+  crashCount    Int      @default(0)
+  cpuUsage      Float?
+  ramUsageMb    Float?
+  lastError     String?
+  startedAt     DateTime?
+  stoppedAt     DateTime?
+  lastHeartbeat DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model BotLog {
+  id        String   @id @default(cuid())
+  serverId  String
+  level     String
+  event     String
+  message   String
+  meta      String?
+  createdAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  serverId  String
+  player    String
+  message   String
+  createdAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Automation {
+  id        String   @id @default(cuid())
+  serverId  String
+  name      String
+  enabled   Boolean  @default(true)
+  trigger   String
+  conditions String
+  actions   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Workflow {
+  id        String   @id @default(cuid())
+  serverId  String
+  name      String
+  schema    String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Schedule {
+  id           String    @id @default(cuid())
+  serverId     String
+  name         String
+  cron         String?
+  frequency    String
+  nextRunAt    DateTime?
+  lastRunAt    DateTime?
+  status       String    @default("ACTIVE")
+  failureCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  serverId  String?
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server Server? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+}
+
+model PlayerWatch {
+  id        String   @id @default(cuid())
+  serverId  String
+  name      String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Backup {
+  id        String   @id @default(cuid())
+  serverId  String
+  label     String
+  payload   String
+  createdAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Secret {
+  id        String   @id @default(cuid())
+  serverId  String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId, key])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  detail    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
