@@ -1,0 +1,65 @@
+model Automation {
+  id String @id @default(cuid())
+  serverId String
+  name String
+  enabled Boolean @default(true)
+  trigger String
+  cooldownSeconds Int @default(0)
+  executionLimit Int?
+  executionCount Int @default(0)
+  scheduleType String?
+  scheduleValue String?
+  nextRunAt DateTime?
+  lastRunAt DateTime?
+  notifyOnFailure Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  conditions AutomationCondition[]
+  actions AutomationAction[]
+  executions AutomationExecution[]
+  @@index([serverId, enabled, trigger])
+  @@index([serverId, nextRunAt])
+}
+
+model AutomationCondition {
+  id String @id @default(cuid())
+  automationId String
+  field String
+  operator String
+  value String
+  position Int @default(0)
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  @@index([automationId, position])
+}
+
+model AutomationAction {
+  id String @id @default(cuid())
+  automationId String
+  type String
+  value String?
+  delayMs Int @default(0)
+  position Int @default(0)
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  @@index([automationId, position])
+}
+
+model AutomationExecution {
+  id String @id @default(cuid())
+  automationId String
+  serverId String
+  chainId String
+  depth Int @default(0)
+  trigger String
+  source String @default("EVENT")
+  status String
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+  error String?
+  actions String?
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@index([automationId, startedAt])
+  @@index([serverId, startedAt])
+  @@index([automationId, status])
+}

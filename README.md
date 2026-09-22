@@ -1,15 +1,5 @@
-# Phase 4 completed
+# Phase 4 completion
 
-Phase 4 now includes Prisma-valid automation relations and indexes, a server-side scheduler process, atomic due-job claiming, event listener startup wiring, persisted execution history, safe condition matching/placeholders, cooldown and execution limits, loop depth protection, and an Information Panel automation UI backed by the API.
+The automation schema, event listener, scheduler process, atomic due-job claim, CRUD APIs, execution history, safe placeholders, conditions, cooldowns, execution limits, loop-depth protection, and dark/orange automation panel foundation are included.
 
-Run:
-
-```bash
-npm install
-npx prisma generate
-npx prisma db push
-npm run typecheck
-npm run build
-```
-
-Run `npm run scheduler` as a separate long-running service. The scheduler is intentionally in-memory/process-local and uses SQLite atomic claims; Redis/BullMQ is deferred. Events emitted by the bot worker load the automation listener in that worker process.
+Run `npm install`, `npx prisma generate`, and `npx prisma db push`. Start the scheduler separately with `npm run scheduler`. The scheduler uses SQLite atomic claims and is intentionally ready to be replaced by Redis/BullMQ later.
