@@ -1,9 +1,15 @@
-# Phase 4 Automation Engine
+# Phase 4 completed
 
-Implemented a database-backed Event → Conditions → Actions engine using the existing Phase 3 event bus and runtime manager.
+Phase 4 now includes Prisma-valid automation relations and indexes, a server-side scheduler process, atomic due-job claiming, event listener startup wiring, persisted execution history, safe condition matching/placeholders, cooldown and execution limits, loop depth protection, and an Information Panel automation UI backed by the API.
 
-Features include persisted automations, ordered conditions/actions, cooldowns, execution limits, chain/depth loop protection, an in-memory concurrency-limited queue, safe placeholders, CRUD APIs, enable/disable, test execution, and execution history.
+Run:
 
-Run `npx prisma generate && npx prisma db push` after pulling the change. Automation actions never execute operating-system commands; chat and command actions are sent through the Mineflayer runtime manager.
+```bash
+npm install
+npx prisma generate
+npx prisma db push
+npm run typecheck
+npm run build
+```
 
-The scheduler data fields are persisted and ready for a worker tick implementation. Redis, distributed locks, and production multi-worker scheduling are intentionally deferred.
+Run `npm run scheduler` as a separate long-running service. The scheduler is intentionally in-memory/process-local and uses SQLite atomic claims; Redis/BullMQ is deferred. Events emitted by the bot worker load the automation listener in that worker process.
