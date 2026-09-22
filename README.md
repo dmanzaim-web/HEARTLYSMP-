@@ -1,7 +1,9 @@
-# Phase 3
+# Phase 4 Automation Engine
 
-Phase 3 adds real Java chat and command delivery through the Mineflayer worker, persisted event history, encrypted authentication configuration primitives, and notification APIs. Bedrock bot runtime is not claimed; only Bedrock status probing is supported.
+Implemented a database-backed Event → Conditions → Actions engine using the existing Phase 3 event bus and runtime manager.
 
-Chat and commands require an ONLINE Java runtime. Commands are sent to Minecraft through Mineflayer and never executed by the operating system.
+Features include persisted automations, ordered conditions/actions, cooldowns, execution limits, chain/depth loop protection, an in-memory concurrency-limited queue, safe placeholders, CRUD APIs, enable/disable, test execution, and execution history.
 
-Set `BOT_SECRET_ENCRYPTION_KEY` before using encrypted authentication secrets. Run `npx prisma db push` after updating the schema.
+Run `npx prisma generate && npx prisma db push` after pulling the change. Automation actions never execute operating-system commands; chat and command actions are sent through the Mineflayer runtime manager.
+
+The scheduler data fields are persisted and ready for a worker tick implementation. Redis, distributed locks, and production multi-worker scheduling are intentionally deferred.
